@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Tu Amigo Invisible</title>
+    <link rel="stylesheet" href="css/styles.css" />
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  </head>
+  <body>
+    <div class="snow-container"></div>
+    <div class="container">
+      <h1>Amigo Invisible 🎅</h1>
+
+      <div id="loading">Buscando en la lista de los buenos...</div>
+
+      <div id="content" class="hidden">
+        <h2 id="greeting">¡Hola!</h2>
+        <p style="text-align: center">Te ha tocado regalar a:</p>
+
+        <div id="reveal-box" class="reveal-card">
+          <div class="overlay-text">Toca para descubrir</div>
+          <div class="hidden-content">
+            <h2
+              id="target-name"
+              style="font-size: 2rem; color: var(--color-primary); margin: 0"
+            >
+              Persona
+            </h2>
+          </div>
+        </div>
+
+        <div id="target-wishes" class="wishlist-box hidden">
+          <strong>Sus sugerencias:</strong>
+          <p id="target-wish-text" style="font-style: italic; color: #555"></p>
+        </div>
+
+        <hr style="margin: 2rem 0; border: 0; border-top: 1px solid #ddd" />
+
+        <h3>Tu lista de deseos</h3>
+        <p style="font-size: 0.9rem; text-align: center">
+          Ayuda a tu Amigo Invisible a elegir.
+        </p>
+        <form id="wishlist-form">
+          <textarea
+            id="my-wishes"
+            rows="4"
+            placeholder="Me encantaría que me regalaran..."
+          ></textarea>
+          <button type="submit" class="btn btn-secondary">
+            Guardar mis sugerencias
+          </button>
+        </form>
+      </div>
+    </div>
+    <script type="module" src="js/reveal.js"></script>
+  </body>
+</html>

@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Secret Santa 🎄</title>
+    <link rel="stylesheet" href="css/styles.css" />
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  </head>
+  <body>
+    <div class="snow-container"></div>
+
+    <div class="container">
+      <h1>Secret Santa</h1>
+
+      <div id="landing-view">
+        <p style="text-align: center; margin-bottom: 2rem">
+          Welcome to the most festive way to organize your gift exchange.
+        </p>
+        <button id="btn-create-game" class="btn">Create New Group</button>
+        <button id="btn-login-game" class="btn btn-secondary">
+          Manage Existing Group
+        </button>
+      </div>
+
+      <div id="create-game-view" class="hidden">
+        <h2>Create Group</h2>
+        <form id="create-game-form">
+          <div class="form-group">
+            <label>Group Name</label>
+            <input
+              type="text"
+              id="new-game-name"
+              required
+              placeholder="e.g. Family 2025"
+            />
+          </div>
+          <div class="form-group">
+            <label>Admin Password</label>
+            <input
+              type="password"
+              id="new-game-password"
+              required
+              placeholder="Keep it safe"
+            />
+          </div>
+          <button type="submit" class="btn">Start Organizing</button>
+          <button type="button" id="btn-back-create" class="btn btn-secondary">
+            Back
+          </button>
+        </form>
+      </div>
+
+      <div id="login-game-view" class="hidden">
+        <h2>Admin Login</h2>
+        <form id="login-game-form">
+          <div class="form-group">
+            <label>Group ID (UUID)</label>
+            <input type="text" id="login-game-id" required />
+          </div>
+          <div class="form-group">
+            <label>Password</label>
+            <input type="password" id="login-game-password" required />
+          </div>
+          <button type="submit" class="btn">Login</button>
+          <button type="button" id="btn-back-login" class="btn btn-secondary">
+            Back
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <script type="module">
+      import { supabase } from "./js/supabase-client.js";
+      import { showElement, hideElement, showToast } from "./js/utils.js";
+
+      const landingView = "landing-view";
+      const createView = "create-game-view";
+      const loginView = "login-game-view";
+
+      document
+        .getElementById("btn-create-game")
+        .addEventListener("click", () => {
+          hideElement(landingView);
+          showElement(createView);
+        });
+
+      document
+        .getElementById("btn-login-game")
+        .addEventListener("click", () => {
+          hideElement(landingView);
+          showElement(loginView);
+        });
+
+      document
+        .getElementById("btn-back-create")
+        .addEventListener("click", () => {
+          hideElement(createView);
+          showElement(landingView);
+        });
+
+      document
+        .getElementById("btn-back-login")
+        .addEventListener("click", () => {
+          hideElement(loginView);
+          showElement(landingView);
+        });
+
+      document
+        .getElementById("create-game-form")
+        .addEventListener("submit", async (e) => {
+          e.preventDefault();
+          const name = document.getElementById("new-game-name").value;
+          const password = document.getElementById("new-game-password").value;
+
+          const { data, error } = await supabase
+            .from("games")
+            .insert([{ name, admin_password: password }])
+            .select()
+            .single();
+
+          if (error) {
+            showToast("Error creating game: " + error.message);
+          } else {
+            localStorage.setItem("admin_game_id", data.id);
+            window.location.href = `admin.html?id=${data.id}`;
+          }
+        });
+
+      document
+        .getElementById("login-game-form")
+        .addEventListener("submit", async (e) => {
+          e.preventDefault();
+          const id = document.getElementById("login-game-id").value;
+          const password = document.getElementById("login-game-password").value;
+
+          const { data, error } = await supabase
+            .from("games")
+            .select("*")
+            .eq("id", id)
+            .eq("admin_password", password)
+            .single();
+
+          if (error || !data) {
+            showToast("Invalid credentials");
+          } else {
+            localStorage.setItem("admin_game_id", data.id);
+            window.location.href = `admin.html?id=${data.id}`;
+          }
+        });
+    </script>
+  </body>
+</html>

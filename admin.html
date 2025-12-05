@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Manage Secret Santa</title>
+    <link rel="stylesheet" href="css/styles.css" />
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+      .match-row {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        width: 100%;
+      }
+      .match-tools {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        width: 100%;
+      }
+      .reveal-btn {
+        background: none;
+        border: 1px solid #ccc;
+        cursor: pointer;
+        padding: 2px 8px;
+        border-radius: 4px;
+        font-size: 1.2rem;
+      }
+      .secret-target {
+        background: #eee;
+        padding: 2px 8px;
+        border-radius: 4px;
+        font-style: italic;
+        color: #666;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="snow-container"></div>
+    <div class="container">
+      <h2>🎄 Dashboard</h2>
+      <div id="game-info" style="text-align: center; margin-bottom: 1rem"></div>
+
+      <div class="form-group">
+        <h3>Add Participant</h3>
+        <form id="add-participant-form">
+          <input
+            type="text"
+            id="p-name"
+            placeholder="Name"
+            required
+            style="margin-bottom: 0.5rem"
+          />
+          <button type="submit" class="btn">Add Elf</button>
+        </form>
+      </div>
+
+      <div
+        class="form-group"
+        style="
+          margin-top: 1.5rem;
+          border-top: 1px dashed #ccc;
+          padding-top: 1rem;
+        "
+      >
+        <h3>Bulk Import</h3>
+        <p style="font-size: 0.8rem; margin-bottom: 0.5rem; color: #666">
+          Paste names separated by new lines
+        </p>
+        <textarea
+          id="p-bulk-names"
+          rows="5"
+          placeholder="Name 1&#10;Name 2&#10;Name 3"
+          style="margin-bottom: 0.5rem"
+        ></textarea>
+        <button type="button" id="btn-bulk-add" class="btn btn-secondary">
+          Import List
+        </button>
+      </div>
+
+      <h3>Participants</h3>
+      <ul id="participants-list" class="participant-list"></ul>
+
+      <hr style="margin: 2rem 0; border: 0; border-top: 1px solid #ddd" />
+
+      <h3>Exclusions (Bidirectional)</h3>
+      <div class="form-group">
+        <select id="excl-from" style="margin-bottom: 0.5rem"></select>
+        <p style="text-align: center; font-size: 0.8rem">
+          mutually excluded with
+        </p>
+        <select id="excl-to" style="margin-bottom: 0.5rem"></select>
+        <button id="btn-add-exclusion" class="btn btn-secondary">
+          Add Pair Rule
+        </button>
+      </div>
+      <ul id="exclusions-list" class="participant-list"></ul>
+
+      <div style="margin-top: 2rem">
+        <button
+          id="btn-draw"
+          class="btn"
+          style="background-color: var(--color-primary)"
+        >
+          🎁 Draw Matches
+        </button>
+        <p
+          id="draw-status"
+          style="
+            text-align: center;
+            margin-top: 0.5rem;
+            font-size: 0.9rem;
+            color: var(--color-secondary);
+          "
+        ></p>
+      </div>
+
+      <div id="results-section" class="hidden" style="margin-top: 2rem">
+        <h3>Matches & Links</h3>
+        <p style="font-size: 0.8rem; margin-bottom: 1rem">
+          <strong>Warning:</strong> Re-drawing invalidates these links.
+        </p>
+        <ul id="links-list" class="participant-list"></ul>
+      </div>
+    </div>
+    <script type="module" src="js/admin.js"></script>
+  </body>
+</html>
