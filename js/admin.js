@@ -39,7 +39,8 @@ async function loadParticipants() {
   const { data, error } = await supabase
     .from("participants")
     .select("*")
-    .eq("game_id", gameId);
+    .eq("game_id", gameId)
+    .order("created_at", { ascending: true });
 
   if (data) {
     participants = data;
@@ -66,9 +67,21 @@ function renderParticipants() {
   participants.forEach((p) => {
     const li = document.createElement("li");
     li.className = "participant-item";
+    li.id = `row-${p.id}`; // Add ID for easier DOM manipulation
+
+    const phoneDisplay = p.phone
+      ? `<br><small style="color:#666">📞 ${p.phone}</small>`
+      : "";
+
     li.innerHTML = `
-            <span>${p.name}</span>
-            <button class="btn btn-danger" onclick="window.removeP('${p.id}')">Remove</button>
+            <div style="flex-grow: 1;">
+                <span id="name-${p.id}" style="font-weight:bold;">${p.name}</span>
+                ${phoneDisplay}
+            </div>
+            <div style="display: flex; gap: 5px;">
+                <button class="btn-icon" onclick="window.editP('${p.id}')" title="Edit">✏️</button>
+                <button class="btn-icon" style="color:#c53030;" onclick="window.removeP('${p.id}')" title="Remove">🗑️</button>
+            </div>
         `;
     list.appendChild(li);
   });
@@ -106,18 +119,68 @@ function renderExclusions() {
   });
 }
 
+// Inline Edit Logic
+window.editP = (id) => {
+  const p = participants.find((part) => part.id === id);
+  if (!p) return;
+
+  const row = document.getElementById(`row-${id}`);
+  const originalHTML = row.innerHTML; // Save just in case but we use re-render mostly
+
+  row.innerHTML = `
+        <div class="edit-row">
+            <input type="text" id="edit-name-${id}" class="edit-input" value="${
+    p.name
+  }" placeholder="Name">
+            <input type="tel" id="edit-phone-${id}" class="edit-input" value="${
+    p.phone || ""
+  }" placeholder="Phone">
+        </div>
+        <div style="display: flex; gap: 5px;">
+            <button class="btn-icon" style="color:var(--color-secondary);" onclick="window.saveP('${id}')" title="Save">✅</button>
+            <button class="btn-icon" style="color:gray;" onclick="window.cancelP('${id}')" title="Cancel">❌</button>
+        </div>
+    `;
+};
+
+window.cancelP = (id) => {
+  // Just re-render the whole list to restore state (fast enough)
+  renderParticipants();
+};
+
+window.saveP = async (id) => {
+  const newName = document.getElementById(`edit-name-${id}`).value;
+  const newPhone = document.getElementById(`edit-phone-${id}`).value;
+
+  if (!newName) return showToast("Name is required");
+
+  const { error } = await supabase
+    .from("participants")
+    .update({ name: newName, phone: newPhone })
+    .eq("id", id);
+
+  if (error) {
+    showToast("Error updating: " + error.message);
+  } else {
+    showToast("Updated successfully");
+    loadParticipants(); // Reload data to reflect changes everywhere
+  }
+};
+
 document
   .getElementById("add-participant-form")
   .addEventListener("submit", async (e) => {
     e.preventDefault();
     const name = document.getElementById("p-name").value;
+    const phone = document.getElementById("p-phone").value;
 
     const { error } = await supabase
       .from("participants")
-      .insert([{ game_id: gameId, name }]);
+      .insert([{ game_id: gameId, name, phone }]);
 
     if (!error) {
       document.getElementById("p-name").value = "";
+      document.getElementById("p-phone").value = "";
       loadParticipants();
       showToast("Participant added");
     } else {
@@ -283,7 +346,7 @@ async function loadLinks() {
     .select(
       `
             id,
-            giver:participants!matches_giver_id_fkey(name),
+            giver:participants!matches_giver_id_fkey(name, phone),
             receiver:participants!matches_receiver_id_fkey(name)
         `,
     )
@@ -298,12 +361,26 @@ async function loadLinks() {
 
   matches.forEach((m) => {
     const link = `${baseUrl}?id=${m.id}`;
+
+    let waButton = "";
+    if (m.giver.phone) {
+      const cleanPhone = m.giver.phone.replace(/\D/g, ""); // Remove non-numbers
+      const message = `🎄 Hola ${m.giver.name}, aquí tienes tu enlace para el Amigo Invisible: ${link}, puedes añadir sugerencias para que te regalen, y recuerda revisar este enlace por si tu amigo invisible añade alguna sugerencia.`;
+      const waUrl = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(
+        message,
+      )}`;
+      waButton = `<a href="${waUrl}" target="_blank" class="btn-whatsapp">WhatsApp</a>`;
+    }
+
     const li = document.createElement("li");
     li.className = "participant-item";
 
     li.innerHTML = `
             <div class="match-row">
-                <strong>${m.giver.name}</strong>
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <strong>${m.giver.name}</strong>
+                    ${waButton}
+                </div>
                 <div class="match-tools">
                     <span id="rev-${m.id}" class="secret-target">🎁 ???</span>
                     <button id="btn-rev-${
