@@ -1,88 +1,358 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Secret Santa 🎄</title>
+    <title>Secret Santa 🎄 — Administración de Grupos</title>
     <link rel="stylesheet" href="css/styles.css" />
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   </head>
   <body>
     <div class="snow-container"></div>
 
-    <div class="container">
-      <h1>Secret Santa</h1>
+    <div class="container hidden">
+      <div class="admin-toolbar">
+        <span class="hero-badge" style="margin-bottom: 0">
+          🛡️ Panel de Administración Desbloqueado
+        </span>
+        <div class="admin-toolbar-actions">
+          <button
+            type="button"
+            id="btn-change-master-pwd"
+            class="nav-back"
+            style="border: none; cursor: pointer"
+          >
+            🔑 Cambiar Contraseña
+          </button>
+          <button
+            type="button"
+            id="btn-logout-admin"
+            class="nav-back"
+            style="border: none; cursor: pointer; color: var(--color-danger)"
+          >
+            🔒 Bloquear
+          </button>
+        </div>
+      </div>
 
-      <div id="landing-view">
-        <p style="text-align: center; margin-bottom: 2rem">
-          Welcome to the most festive way to organize your gift exchange.
+      <div class="hero-header">
+        <h1>Amigo Invisible 🎅</h1>
+        <p class="subtitle">
+          Organiza tus sorteos con códigos fáciles de recordar, listas de deseos y verificación de integridad sin spoilers.
         </p>
-        <button id="btn-create-game" class="btn">Create New Group</button>
-        <button id="btn-login-game" class="btn btn-secondary">
-          Manage Existing Group
+      </div>
+
+      <!-- LANDING VIEW -->
+      <div id="landing-view">
+        <div
+          style="
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            justify-content: center;
+            margin-bottom: 1.5rem;
+          "
+        >
+          <span class="wish-status-badge" style="padding: 0.3rem 0.7rem; font-size: 0.78rem">
+            🏷️ Códigos legibles (sin UUID)
+          </span>
+          <span class="wish-status-badge" style="padding: 0.3rem 0.7rem; font-size: 0.78rem">
+            📋 Copia e importa grupos
+          </span>
+          <span class="wish-status-badge" style="padding: 0.3rem 0.7rem; font-size: 0.78rem">
+            🔒 Verificación sin spoilers
+          </span>
+        </div>
+
+        <button id="btn-create-game" class="btn">
+          ✨ Crear Nuevo Grupo
         </button>
+        <button id="btn-login-game" class="btn btn-secondary">
+          🏷️ Buscar Grupo por Código
+        </button>
+
+        <div id="all-groups-container" class="recent-games-box">
+          <p class="recent-games-title">Tus Grupos Guardados</p>
+          <ul id="all-groups-list" class="participant-list"></ul>
+        </div>
       </div>
 
+      <!-- CREATE / CLONE GROUP VIEW -->
       <div id="create-game-view" class="hidden">
-        <h2>Create Group</h2>
-        <form id="create-game-form">
-          <div class="form-group">
-            <label>Group Name</label>
-            <input
-              type="text"
-              id="new-game-name"
-              required
-              placeholder="e.g. Family 2025"
-            />
-          </div>
-          <div class="form-group">
-            <label>Admin Password</label>
-            <input
-              type="password"
-              id="new-game-password"
-              required
-              placeholder="Keep it safe"
-            />
-          </div>
-          <button type="submit" class="btn">Start Organizing</button>
-          <button type="button" id="btn-back-create" class="btn btn-secondary">
-            Back
-          </button>
-        </form>
+        <div class="section-card" style="margin-bottom: 0">
+          <h2 id="create-view-title">🎁 Crear Nuevo Grupo</h2>
+          <form id="create-game-form">
+            <div class="form-group">
+              <label for="new-game-name">Nombre del Grupo</label>
+              <input
+                type="text"
+                id="new-game-name"
+                required
+                placeholder="Ej. Familia Navidad 2026"
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="new-game-code">
+                Código del Grupo (fácil de recordar)
+                <span class="label-hint">(se usa para identificar el grupo sin UUID)</span>
+              </label>
+              <input
+                type="text"
+                id="new-game-code"
+                required
+                placeholder="Ej. FAMILIA-2026"
+                style="font-family: monospace; font-weight: 700; text-transform: uppercase"
+              />
+            </div>
+
+            <div class="form-group" style="margin-top: 1.15rem">
+              <label for="clone-source-group">
+                📋 ¿Copiar datos de un grupo anterior?
+                <span class="label-hint">(opcional)</span>
+              </label>
+              <select id="clone-source-group">
+                <option value="">— Empezar grupo desde cero (vacío) —</option>
+              </select>
+
+              <div id="clone-options-box" class="checkbox-list hidden">
+                <label class="checkbox-row">
+                  <input type="checkbox" id="chk-clone-participants" checked />
+                  <span>
+                    <strong>Participantes y teléfonos</strong><br />
+                    <small style="color: var(--color-text-muted)">
+                      Copia las personas del grupo (sin sus deseos anteriores, para que cada año empiecen de cero).
+                    </small>
+                  </span>
+                </label>
+                <label class="checkbox-row">
+                  <input type="checkbox" id="chk-clone-exclusions" checked />
+                  <span>
+                    <strong>Reglas de exclusión (parejas)</strong><br />
+                    <small style="color: var(--color-text-muted)">
+                      Mantiene las restricciones de quién no puede regalar a quién.
+                    </small>
+                  </span>
+                </label>
+              </div>
+            </div>
+
+            <button type="submit" id="btn-submit-create" class="btn">
+              🎄 Crear y Entrar al Grupo
+            </button>
+            <button type="button" id="btn-back-create" class="btn btn-outline">
+              ← Volver
+            </button>
+          </form>
+        </div>
       </div>
 
+      <!-- ACCESS GROUP BY HUMAN CODE VIEW -->
       <div id="login-game-view" class="hidden">
-        <h2>Admin Login</h2>
-        <form id="login-game-form">
-          <div class="form-group">
-            <label>Group ID (UUID)</label>
-            <input type="text" id="login-game-id" required />
-          </div>
-          <div class="form-group">
-            <label>Password</label>
-            <input type="password" id="login-game-password" required />
-          </div>
-          <button type="submit" class="btn">Login</button>
-          <button type="button" id="btn-back-login" class="btn btn-secondary">
-            Back
-          </button>
-        </form>
+        <div class="section-card" style="margin-bottom: 0">
+          <h2>🏷️ Entrar a un Grupo por Código</h2>
+          <p style="font-size: 0.88rem; color: var(--color-text-muted); text-align: center; margin-bottom: 1.1rem">
+            Escribe el código legible de tu grupo (ej. <strong>FAMILIA-2026</strong>) o su nombre:
+          </p>
+          <form id="login-game-form">
+            <div class="form-group">
+              <label for="login-game-code">Código o Nombre del Grupo</label>
+              <input
+                type="text"
+                id="login-game-code"
+                required
+                placeholder="Ej. FAMILIA-2026"
+                style="font-weight: 700"
+              />
+            </div>
+            <button type="submit" class="btn">Abrir Panel del Grupo →</button>
+            <button type="button" id="btn-back-login" class="btn btn-outline">
+              ← Volver
+            </button>
+          </form>
+        </div>
       </div>
     </div>
 
     <script type="module">
       import { supabase } from "./js/supabase-client.js";
-      import { showElement, hideElement, showToast } from "./js/utils.js";
+      import {
+        showElement,
+        hideElement,
+        showToast,
+        initSnowfall,
+        escapeHtml,
+      } from "./js/utils.js";
+      import {
+        requireAdminAuth,
+        logoutAdmin,
+        openChangePasswordModal,
+        openDeleteGroupModal,
+        slugifyGroupCode,
+        formatCodeForStorage,
+        fetchAllGroups,
+        findGroupByCodeOrIdentifier,
+        copyGroupData,
+      } from "./js/auth.js";
+
+      initSnowfall();
 
       const landingView = "landing-view";
       const createView = "create-game-view";
       const loginView = "login-game-view";
 
+      let cachedGroups = [];
+      let codeManuallyEdited = false;
+
+      async function initIndex() {
+        await requireAdminAuth();
+        await loadAndRenderGroups();
+      }
+
+      async function loadAndRenderGroups() {
+        cachedGroups = await fetchAllGroups();
+        const ul = document.getElementById("all-groups-list");
+        const cloneSelect = document.getElementById("clone-source-group");
+
+        cloneSelect.innerHTML = `<option value="">— Empezar grupo desde cero (vacío) —</option>`;
+        cachedGroups.forEach((g) => {
+          cloneSelect.add(
+            new Option(`${g.name} (Código: ${g.code})`, g.id),
+          );
+        });
+
+        if (cachedGroups.length === 0) {
+          ul.innerHTML = `
+            <li style="text-align:center; padding: 1.1rem; color: var(--color-text-light); font-size: 0.88rem;">
+              Todavía no has creado ningún grupo. ¡Pulsa «Crear Nuevo Grupo» para empezar!
+            </li>
+          `;
+          return;
+        }
+
+        ul.innerHTML = "";
+        cachedGroups.forEach((g) => {
+          const li = document.createElement("li");
+          li.className = "participant-item";
+          const statusLabel = g.is_drawn ? "✅ Sorteado" : "⏳ En preparación";
+          li.innerHTML = `
+            <div class="participant-meta">
+              <div class="avatar-circle">🎄</div>
+              <div class="participant-details">
+                <div class="participant-name-row">
+                  <span class="participant-name">${escapeHtml(g.name)}</span>
+                  <span class="code-badge">🏷️ ${escapeHtml(g.code)}</span>
+                </div>
+                <span class="participant-phone">${statusLabel}</span>
+              </div>
+            </div>
+            <div style="display:flex; gap:0.4rem; flex-shrink:0;">
+              <button
+                type="button"
+                class="btn-icon"
+                title="Duplicar / Copiar este grupo en otro"
+                onclick="window.prepareCloneGroup('${g.id}')"
+              >
+                📋
+              </button>
+              <button
+                type="button"
+                class="btn-icon"
+                style="color: var(--color-danger);"
+                title="Eliminar grupo"
+                onclick="window.requestDeleteGroup('${g.id}')"
+              >
+                🗑️
+              </button>
+              <a
+                href="admin.html?code=${encodeURIComponent(g.code)}"
+                class="btn btn-sm"
+                style="width:auto;"
+              >
+                Abrir →
+              </a>
+            </div>
+          `;
+          ul.appendChild(li);
+        });
+      }
+
+      window.requestDeleteGroup = (groupId) => {
+        const target = cachedGroups.find((g) => g.id === groupId);
+        if (!target) return;
+        openDeleteGroupModal(target, async () => {
+          await loadAndRenderGroups();
+        });
+      };
+
+      window.prepareCloneGroup = (sourceId) => {
+        const source = cachedGroups.find((g) => g.id === sourceId);
+        if (!source) return;
+
+        hideElement(landingView);
+        showElement(createView);
+
+        document.getElementById("create-view-title").textContent =
+          `📋 Copiar Grupo «${source.name}»`;
+        const nameInput = document.getElementById("new-game-name");
+        const codeInput = document.getElementById("new-game-code");
+        const cloneSelect = document.getElementById("clone-source-group");
+
+        const suggestedName = `${source.name} (Copia)`;
+        nameInput.value = suggestedName;
+        codeInput.value = slugifyGroupCode(`${source.code}-COPIA`);
+        codeManuallyEdited = false;
+
+        cloneSelect.value = source.id;
+        showElement("clone-options-box");
+        nameInput.focus();
+      };
+
+      document
+        .getElementById("btn-change-master-pwd")
+        .addEventListener("click", openChangePasswordModal);
+
+      document
+        .getElementById("btn-logout-admin")
+        .addEventListener("click", logoutAdmin);
+
+      document
+        .getElementById("new-game-name")
+        .addEventListener("input", (e) => {
+          if (!codeManuallyEdited) {
+            document.getElementById("new-game-code").value = slugifyGroupCode(
+              e.target.value,
+            );
+          }
+        });
+
+      document
+        .getElementById("new-game-code")
+        .addEventListener("input", () => {
+          codeManuallyEdited = true;
+        });
+
+      document
+        .getElementById("clone-source-group")
+        .addEventListener("change", (e) => {
+          if (e.target.value) {
+            showElement("clone-options-box");
+          } else {
+            hideElement("clone-options-box");
+          }
+        });
+
       document
         .getElementById("btn-create-game")
         .addEventListener("click", () => {
+          document.getElementById("create-view-title").textContent =
+            "🎁 Crear Nuevo Grupo";
+          document.getElementById("create-game-form").reset();
+          codeManuallyEdited = false;
+          hideElement("clone-options-box");
           hideElement(landingView);
           showElement(createView);
+          document.getElementById("new-game-name").focus();
         });
 
       document
@@ -90,6 +360,7 @@
         .addEventListener("click", () => {
           hideElement(landingView);
           showElement(loginView);
+          document.getElementById("login-game-code").focus();
         });
 
       document
@@ -110,44 +381,81 @@
         .getElementById("create-game-form")
         .addEventListener("submit", async (e) => {
           e.preventDefault();
-          const name = document.getElementById("new-game-name").value;
-          const password = document.getElementById("new-game-password").value;
+          const name = document.getElementById("new-game-name").value.trim();
+          const rawCode = document.getElementById("new-game-code").value.trim();
+          const cleanCode = slugifyGroupCode(rawCode || name);
+          const sourceGameId = document.getElementById("clone-source-group").value;
+
+          if (!cleanCode) {
+            return showToast("Introduce un código válido para el grupo", "warning");
+          }
+
+          // Check uniqueness of code
+          const existing = cachedGroups.find(
+            (g) => g.code.toUpperCase() === cleanCode.toUpperCase(),
+          );
+          if (existing) {
+            return showToast(
+              `El código «${cleanCode}» ya está en uso por el grupo «${existing.name}». Elige otro.`,
+              "warning",
+            );
+          }
+
+          const btn = document.getElementById("btn-submit-create");
+          btn.disabled = true;
+          btn.textContent = "Creando grupo...";
 
           const { data, error } = await supabase
             .from("games")
-            .insert([{ name, admin_password: password }])
+            .insert([
+              {
+                name,
+                admin_password: formatCodeForStorage(cleanCode),
+                is_drawn: false,
+              },
+            ])
             .select()
             .single();
 
           if (error) {
-            showToast("Error creating game: " + error.message);
-          } else {
-            localStorage.setItem("admin_game_id", data.id);
-            window.location.href = `admin.html?id=${data.id}`;
+            btn.disabled = false;
+            btn.textContent = "🎄 Crear y Entrar al Grupo";
+            return showToast("Error al crear el grupo: " + error.message, "error");
           }
+
+          if (sourceGameId) {
+            btn.textContent = "Copiando participantes y exclusiones...";
+            await copyGroupData({
+              sourceGameId,
+              targetGameId: data.id,
+              importParticipants: document.getElementById("chk-clone-participants").checked,
+              importExclusions: document.getElementById("chk-clone-exclusions").checked,
+            });
+          }
+
+          localStorage.setItem("admin_game_id", data.id);
+          window.location.href = `admin.html?code=${encodeURIComponent(cleanCode)}`;
         });
 
       document
         .getElementById("login-game-form")
         .addEventListener("submit", async (e) => {
           e.preventDefault();
-          const id = document.getElementById("login-game-id").value;
-          const password = document.getElementById("login-game-password").value;
+          const query = document.getElementById("login-game-code").value.trim();
+          const found = await findGroupByCodeOrIdentifier(query);
 
-          const { data, error } = await supabase
-            .from("games")
-            .select("*")
-            .eq("id", id)
-            .eq("admin_password", password)
-            .single();
-
-          if (error || !data) {
-            showToast("Invalid credentials");
+          if (!found) {
+            showToast(
+              `No se encontró ningún grupo con el código o nombre «${query}»`,
+              "error",
+            );
           } else {
-            localStorage.setItem("admin_game_id", data.id);
-            window.location.href = `admin.html?id=${data.id}`;
+            localStorage.setItem("admin_game_id", found.id);
+            window.location.href = `admin.html?code=${encodeURIComponent(found.code)}`;
           }
         });
+
+      initIndex();
     </script>
   </body>
 </html>

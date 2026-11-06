@@ -3,56 +3,168 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Tu Amigo Invisible</title>
+    <title>Tu Amigo Invisible 🎅 — Descubre tu asignación</title>
     <link rel="stylesheet" href="css/styles.css" />
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   </head>
   <body>
     <div class="snow-container"></div>
-    <div class="container">
-      <h1>Amigo Invisible 🎅</h1>
 
-      <div id="loading">Buscando en la lista de los buenos...</div>
+    <div class="container">
+      <div class="hero-header" style="margin-bottom: 1.5rem">
+        <span class="hero-badge">🎅 Asignación Secreta</span>
+        <h1>Amigo Invisible</h1>
+      </div>
+
+      <div
+        id="loading"
+        style="
+          text-align: center;
+          padding: 2rem;
+          color: var(--color-text-muted);
+          font-weight: 600;
+        "
+      >
+        ✨ Buscando en la lista de Papá Noel...
+      </div>
 
       <div id="content" class="hidden">
-        <h2 id="greeting">¡Hola!</h2>
-        <p style="text-align: center">Te ha tocado regalar a:</p>
+        <div class="section-card" style="background: #fffdf9; border-color: #fde68a">
+          <h2 id="greeting" style="margin-bottom: 0.25rem">¡Hola!</h2>
+          <p style="text-align: center; color: var(--color-text-muted); font-size: 0.95rem">
+            En este sorteo te ha tocado hacerle un regalo a:
+          </p>
 
-        <div id="reveal-box" class="reveal-card">
-          <div class="overlay-text">Toca para descubrir</div>
-          <div class="hidden-content">
-            <h2
-              id="target-name"
-              style="font-size: 2rem; color: var(--color-primary); margin: 0"
+          <div id="reveal-box" class="reveal-card" role="button" tabindex="0">
+            <div class="overlay-text">
+              <span class="overlay-gift-icon">🎁</span>
+              <span class="overlay-cta">Toca aquí para descubrirlo</span>
+              <small style="font-weight: 400; opacity: 0.85; font-size: 0.78rem">
+                Asegúrate de que nadie esté mirando tu pantalla
+              </small>
+            </div>
+            <div class="hidden-content">
+              <span
+                style="
+                  font-size: 0.78rem;
+                  text-transform: uppercase;
+                  letter-spacing: 0.08em;
+                  color: #92400e;
+                  font-weight: 700;
+                "
+              >
+                Tu persona asignada es
+              </span>
+              <h2 id="target-name" class="target-name-title">Persona</h2>
+              <span style="font-size: 0.8rem; color: var(--color-text-muted)">
+                (Toca la tarjeta de nuevo si quieres volver a ocultarlo)
+              </span>
+            </div>
+          </div>
+
+          <div id="target-wishes" class="wishlist-box">
+            <div class="wishlist-box-header">
+              <span>💡</span>
+              <span>Sus sugerencias y enlaces de regalo:</span>
+            </div>
+            <p
+              id="target-empty-wishes"
+              style="font-size: 0.88rem; color: var(--color-text-light); font-style: italic"
             >
-              Persona
-            </h2>
+              Todavía no ha escrito sugerencias ni enlaces. Puedes volver a abrir este enlace en cualquier momento para ver si ha actualizado su lista.
+            </p>
+            <div id="target-wish-text" class="wishlist-text-note hidden"></div>
+            <div id="target-links-container" class="hidden">
+              <div
+                style="
+                  font-size: 0.8rem;
+                  font-weight: 700;
+                  color: var(--color-text-muted);
+                  margin-bottom: 0.4rem;
+                "
+              >
+                🛍️ Enlaces de tiendas online sugeridos:
+              </div>
+              <div id="target-wish-links" class="store-links-grid"></div>
+            </div>
           </div>
         </div>
 
-        <div id="target-wishes" class="wishlist-box hidden">
-          <strong>Sus sugerencias:</strong>
-          <p id="target-wish-text" style="font-style: italic; color: #555"></p>
+        <hr class="divider" />
+
+        <!-- MY WISHLIST & STORE LINKS EDITOR -->
+        <div class="section-card" style="margin-bottom: 0">
+          <div class="section-header">
+            <h3>📝 Tu Lista de Deseos</h3>
+            <span class="wish-status-badge">Visible para tu Amigo Invisible</span>
+          </div>
+          <p style="font-size: 0.88rem; color: var(--color-text-muted); margin-bottom: 1rem">
+            Escribe pistas sobre tus gustos, tallas o ideas, y añade si quieres enlaces directos a tiendas online.
+          </p>
+
+          <form id="wishlist-form">
+            <div class="form-group">
+              <label for="my-wishes">
+                Tus ideas, gustos o tallas
+                <span class="label-hint">(opcional)</span>
+              </label>
+              <textarea
+                id="my-wishes"
+                rows="3"
+                placeholder="Ej. Me encantan las novelas de misterio, uso talla M en camisetas, o me haría ilusión unos auriculares..."
+              ></textarea>
+            </div>
+
+            <div class="form-group">
+              <label>
+                🛍️ Enlaces de tiendas online
+                <span class="label-hint">(opcional — Amazon, Zara, Fnac, etc.)</span>
+              </label>
+
+              <div class="link-builder-box">
+                <div class="link-builder-inputs">
+                  <input
+                    type="text"
+                    id="new-link-title"
+                    placeholder="Detalle (ej. Sudadera azul talla M)"
+                  />
+                  <input
+                    type="text"
+                    id="new-link-url"
+                    placeholder="Enlace (https://...)"
+                  />
+                  <button
+                    type="button"
+                    id="btn-add-link"
+                    class="btn btn-sm"
+                    style="height: 44px; white-space: nowrap"
+                  >
+                    ➕ Añadir
+                  </button>
+                </div>
+                <small
+                  style="
+                    display: block;
+                    margin-top: 0.45rem;
+                    font-size: 0.76rem;
+                    color: var(--color-text-light);
+                  "
+                >
+                  Puedes añadir tantos enlaces como quieras para darle opciones a tu Amigo Invisible.
+                </small>
+              </div>
+
+              <div id="my-links-list" class="store-links-grid"></div>
+            </div>
+
+            <button type="submit" id="btn-save-wishes" class="btn btn-secondary" style="margin-top: 0.5rem">
+              💾 Guardar mis sugerencias y enlaces
+            </button>
+          </form>
         </div>
-
-        <hr style="margin: 2rem 0; border: 0; border-top: 1px solid #ddd" />
-
-        <h3>Tu lista de deseos</h3>
-        <p style="font-size: 0.9rem; text-align: center">
-          Ayuda a tu Amigo Invisible a elegir.
-        </p>
-        <form id="wishlist-form">
-          <textarea
-            id="my-wishes"
-            rows="4"
-            placeholder="Me encantaría que me regalaran..."
-          ></textarea>
-          <button type="submit" class="btn btn-secondary">
-            Guardar mis sugerencias
-          </button>
-        </form>
       </div>
     </div>
+
     <script type="module" src="js/reveal.js"></script>
   </body>
 </html>

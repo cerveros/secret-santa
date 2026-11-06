@@ -1,106 +1,253 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Manage Secret Santa</title>
+    <title>Panel de Organización — Amigo Invisible 🎄</title>
     <link rel="stylesheet" href="css/styles.css" />
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   </head>
   <body>
     <div class="snow-container"></div>
-    <div class="container">
-      <h2>🎄 Dashboard</h2>
-      <div id="game-info" style="text-align: center; margin-bottom: 1rem"></div>
 
-      <div class="form-group">
-        <h3>Add Participant</h3>
+    <div class="container hidden">
+      <div class="admin-toolbar">
+        <a href="index.html" class="nav-back">← Todos los Grupos</a>
+        <div class="admin-toolbar-actions">
+          <span id="header-status-badge" class="hero-badge" style="margin-bottom: 0">
+            ⏳ Pendiente de sorteo
+          </span>
+          <button
+            type="button"
+            id="btn-change-master-pwd"
+            class="nav-back"
+            style="border: none; cursor: pointer"
+            title="Cambiar contraseña maestra de administración"
+          >
+            🔑 Contraseña
+          </button>
+          <button
+            type="button"
+            id="btn-logout-admin"
+            class="nav-back"
+            style="border: none; cursor: pointer; color: var(--color-danger)"
+            title="Bloquear panel de administración"
+          >
+            🔒 Bloquear
+          </button>
+        </div>
+      </div>
+
+      <div id="game-info" class="game-header-banner">
+        <div class="game-title-block">
+          <h2 id="game-title-text">Cargando grupo...</h2>
+          <div style="display: flex; align-items: center; gap: 0.45rem; flex-wrap: wrap; margin-top: 0.25rem">
+            <span
+              id="game-code-copy"
+              class="code-badge"
+              style="cursor: pointer"
+              title="Haz clic para copiar el código del grupo"
+            >
+              🏷️ Código: ...
+            </span>
+            <button
+              type="button"
+              id="btn-edit-group-code"
+              class="nav-back"
+              style="padding: 0.2rem 0.55rem; font-size: 0.75rem; border: 1px solid var(--color-border); cursor: pointer"
+              title="Cambiar el código legible de este grupo"
+            >
+              ✏️ Cambiar código
+            </button>
+          </div>
+        </div>
+
+        <div style="display: flex; gap: 0.45rem; flex-wrap: wrap">
+          <button
+            type="button"
+            id="btn-open-import-modal"
+            class="btn btn-sm btn-outline"
+            style="margin-top: 0; background: #ffffff"
+          >
+            📥 Importar de otro Grupo
+          </button>
+          <button
+            type="button"
+            id="btn-open-clone-modal"
+            class="btn btn-sm"
+            style="margin-top: 0"
+          >
+            📋 Copiar Grupo en otro
+          </button>
+          <button
+            type="button"
+            id="btn-delete-current-group"
+            class="btn-danger"
+            style="padding: 0.45rem 0.75rem; font-size: 0.82rem"
+            title="Eliminar este grupo permanentemente"
+          >
+            🗑️ Eliminar Grupo
+          </button>
+        </div>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat-box">
+          <div id="stat-participants" class="stat-value">0</div>
+          <div class="stat-label">Participantes</div>
+        </div>
+        <div class="stat-box">
+          <div id="stat-exclusions" class="stat-value">0</div>
+          <div class="stat-label">Exclusiones</div>
+        </div>
+        <div class="stat-box">
+          <div id="stat-wishes" class="stat-value">0</div>
+          <div class="stat-label">Con Deseos</div>
+        </div>
+      </div>
+
+      <!-- 1. PARTICIPANTS SECTION -->
+      <div class="section-card">
+        <div class="section-header">
+          <h3>🧝 Participantes</h3>
+          <span id="participants-badge" class="badge-count">0 personas</span>
+        </div>
+
         <form id="add-participant-form">
-          <input
-            type="text"
-            id="p-name"
-            placeholder="Name"
-            required
-            style="margin-bottom: 0.5rem"
-          />
-          <input
-            type="tel"
-            id="p-phone"
-            placeholder="Phone (with country code, e.g. 34600...)"
-            style="margin-bottom: 0.5rem"
-          />
-          <button type="submit" class="btn">Add Elf</button>
+          <div class="form-row" style="margin-bottom: 0.75rem">
+            <div>
+              <label for="p-name">Nombre</label>
+              <input
+                type="text"
+                id="p-name"
+                placeholder="Ej. Laura"
+                required
+              />
+            </div>
+            <div>
+              <label for="p-phone">
+                Teléfono <span class="label-hint">(opcional, con prefijo)</span>
+              </label>
+              <input
+                type="tel"
+                id="p-phone"
+                placeholder="Ej. 34600112233"
+              />
+            </div>
+          </div>
+          <button type="submit" class="btn">➕ Añadir Participante</button>
         </form>
+
+        <details class="bulk-details">
+          <summary>📥 Importar varios nombres por texto</summary>
+          <p style="font-size: 0.82rem; margin-bottom: 0.5rem; color: var(--color-text-muted)">
+            Pega un nombre por línea para añadirlos todos a la vez:
+          </p>
+          <textarea
+            id="p-bulk-names"
+            rows="4"
+            placeholder="Ana&#10;Carlos&#10;Lucía&#10;Marcos"
+            style="margin-bottom: 0.6rem"
+          ></textarea>
+          <button type="button" id="btn-bulk-add" class="btn btn-secondary" style="margin-top: 0">
+            Importar Lista
+          </button>
+        </details>
+
+        <ul id="participants-list" class="participant-list"></ul>
       </div>
 
-      <div
-        class="form-group"
-        style="
-          margin-top: 1.5rem;
-          border-top: 1px dashed #ccc;
-          padding-top: 1rem;
-        "
-      >
-        <h3>Bulk Import</h3>
-        <p style="font-size: 0.8rem; margin-bottom: 0.5rem; color: #666">
-          Paste names only (separated by new lines)
+      <!-- 2. EXCLUSIONS SECTION -->
+      <div class="section-card">
+        <div class="section-header">
+          <h3>🚫 Exclusiones (Bidireccionales)</h3>
+          <span id="exclusions-badge" class="badge-count">0 reglas</span>
+        </div>
+        <p style="font-size: 0.85rem; color: var(--color-text-muted); margin-bottom: 0.85rem">
+          Evita que dos personas se regalen mutuamente (por ejemplo, parejas o familiares directos).
         </p>
-        <textarea
-          id="p-bulk-names"
-          rows="5"
-          placeholder="Name 1&#10;Name 2&#10;Name 3"
-          style="margin-bottom: 0.5rem"
-        ></textarea>
-        <button type="button" id="btn-bulk-add" class="btn btn-secondary">
-          Import List
+
+        <div class="exclusion-builder">
+          <select id="excl-from" aria-label="Primera persona"></select>
+          <span class="exclusion-vs">↔ No regala a</span>
+          <select id="excl-to" aria-label="Segunda persona"></select>
+        </div>
+        <button id="btn-add-exclusion" class="btn btn-outline" style="margin-top: 0">
+          ➕ Añadir Regla de Exclusión
         </button>
+
+        <ul id="exclusions-list" class="participant-list"></ul>
       </div>
 
-      <h3>Participants</h3>
-      <ul id="participants-list" class="participant-list"></ul>
-
-      <hr style="margin: 2rem 0; border: 0; border-top: 1px solid #ddd" />
-
-      <h3>Exclusions (Bidirectional)</h3>
-      <div class="form-group">
-        <select id="excl-from" style="margin-bottom: 0.5rem"></select>
-        <p style="text-align: center; font-size: 0.8rem">
-          mutually excluded with
+      <!-- 3. DRAW & ZERO-KNOWLEDGE INTEGRITY VALIDATOR -->
+      <div class="section-card" style="border-color: #fde68a; background: #fffdf8">
+        <div class="section-header">
+          <h3>🎲 Sorteo y Doble Check de Integridad</h3>
+        </div>
+        <p style="font-size: 0.86rem; color: var(--color-text-muted); margin-bottom: 1rem">
+          Genera los emparejamientos aleatorios respetando todas las exclusiones y comprueba que el sorteo sea 100% válido sin desvelar ninguna pareja.
         </p>
-        <select id="excl-to" style="margin-bottom: 0.5rem"></select>
-        <button id="btn-add-exclusion" class="btn btn-secondary">
-          Add Pair Rule
-        </button>
-      </div>
-      <ul id="exclusions-list" class="participant-list"></ul>
 
-      <div style="margin-top: 2rem">
-        <button
-          id="btn-draw"
-          class="btn"
-          style="background-color: var(--color-primary)"
-        >
-          🎁 Draw Matches
-        </button>
+        <div style="display: flex; flex-direction: column; gap: 0.65rem">
+          <button id="btn-draw" class="btn btn-primary-red">
+            🎁 Realizar Sorteo de Parejas
+          </button>
+          <button
+            id="btn-verify-integrity"
+            type="button"
+            class="btn btn-outline hidden"
+            style="margin-top: 0; border-color: var(--color-secondary); color: var(--color-secondary)"
+          >
+            🛡️ Verificar Integridad de las Parejas (Sin Spoilers)
+          </button>
+        </div>
+
         <p
           id="draw-status"
           style="
             text-align: center;
-            margin-top: 0.5rem;
-            font-size: 0.9rem;
+            margin-top: 0.65rem;
+            font-size: 0.86rem;
+            font-weight: 600;
             color: var(--color-secondary);
           "
         ></p>
+
+        <!-- Zero-Knowledge Integrity Report Panel -->
+        <div id="integrity-panel" class="integrity-panel hidden">
+          <div class="integrity-header">
+            <div id="integrity-title" class="integrity-title">
+              <span>✅</span>
+              <span>Sorteo Íntegro y Verificado</span>
+            </div>
+            <span id="integrity-hash" class="integrity-hash" title="Huella criptográfica anónima del sorteo">
+              #CHK-0000
+            </span>
+          </div>
+          <p id="integrity-summary" style="font-size: 0.85rem; color: var(--color-text-muted)">
+            Se han comprobado matemáticamente todos los emparejamientos en la base de datos sin revelar las identidades:
+          </p>
+          <div id="integrity-checks-grid" class="integrity-checks-grid"></div>
+          <div class="integrity-privacy-note">
+            🔒 <span>Auditoría ciega completada: ningún emparejamiento ha sido expuesto en pantalla.</span>
+          </div>
+        </div>
       </div>
 
-      <div id="results-section" class="hidden" style="margin-top: 2rem">
-        <h3>Matches & Links</h3>
-        <p style="font-size: 0.8rem; margin-bottom: 1rem">
-          <strong>Warning:</strong> Re-drawing invalidates these links.
+      <!-- 4. LINKS & MATCHES SECTION -->
+      <div id="results-section" class="section-card hidden" style="margin-bottom: 0">
+        <div class="section-header">
+          <h3>💌 Enlaces de los Participantes</h3>
+          <span class="badge-count" id="links-count-badge">Listos para enviar</span>
+        </div>
+        <p style="font-size: 0.84rem; color: var(--color-text-muted); margin-bottom: 1rem">
+          Comparte a cada persona su enlace único por WhatsApp o copiándolo.
+          <strong>Aviso:</strong> Si vuelves a sortear, los enlaces anteriores dejarán de funcionar.
         </p>
         <ul id="links-list" class="participant-list"></ul>
       </div>
     </div>
+
     <script type="module" src="js/admin.js"></script>
   </body>
 </html>
